@@ -10,6 +10,7 @@ from colorama import Fore, Back, Style
 import analysis as an
 import aux
 import matplotlib.pyplot as plt
+import json
 
 __author__ = "Cássio Alves"
 __version__ = "1.0[beta]"
@@ -66,20 +67,6 @@ def get_files(directory):
 		except KeyboardInterrupt:
 			sys.exit('Exitting...')
 
-	#files = ''	 
-	#while(os.path.isdir(chosen_file)):
-
-	#	files = get_files(chosen_file)
-	#	if (os.path.isdir(chosen_file)):
-	#		try:
-
-	#			chosen_file = open_file(files[int(input(colored('Which one do you want to open? ','white',attrs=['bold'])))-1])
-	#		except IndexError:
-	#			print(colored("Please, type in a whole number in the range 1-"+str(len(files)),'red',attrs=['bold']))
-	#			continue
-	#	else:	
-	#		return chosen_file		
-	#		break
 	return chosen_file
 
 
@@ -108,69 +95,29 @@ def main():
 
 	#Prompting user for directory to list contents and file to open
 	chosen_file = get_files(input(colored('\nType in dir path for listing files in it ','white',attrs=['bold'])))	
-#	chosen_file = open_file(files[int(input(colored('Which one do you want to open? ','white',attrs=['bold'])))-1])
-#	while(os.path.isdir(chosen_file)):
-
-#		files = get_files(chosen_file)
-#		if (os.path.isdir(chosen_file)):
-#			try:
-
-#				chosen_file = open_file(files[int(input(colored('Which one do you want to open? ','white',attrs=['bold'])))-1])
-#			except:# IndexError:
-#				print(colored("Please, type in a whole number in the range 1-"+str(len(files)),'red',attrs=['bold']))
-#				continue
-#		else:			
-#			break"""
 
 	#Prompting user for what kind of regression to perform
-	x,y,regression_type = an.get_columns(chosen_file)
-	#print(regression_type)
+	x,y,regression_type,cols = an.get_columns(chosen_file)
 
-	if regression_type == 'logistic':
-		an.logistic(x,y)
-	else:
-		an.linear(x,y)
-"""	mod = ''
-	print(colored("1 - Logistic\n2 - Linear",'green',attrs=['bold']))
-	mod = int(input(colored("Which type of regression do you want to perform? ",'white',attrs=['bold'])))
-	while (1>0):
-		if (mod == 1):		
-			an.logistic(chosen_file)
-			break
-		elif (mod == 2):
-			an.linear(chosen_file)
-			break
-		else:
-			print(colored("Invalid option. Please, select [1] for logistic regression or [2] for linear regression ",'red',attrs=['underline','bold']))
-			mod = int(input(colored("Which type of regression do you want to perform? ",'cyan',attrs=['bold'])))"""
+	result_file = chosen_file + '_results.json'
 	
-"""data = pd.read_csv('train.csv')
-an.add_bias(data)
-#print(data)
+	if regression_type == 'logistic':
+	
+		theta,accuracy = an.logistic(x,y)
 
-aa = data[['bias','Pclass','Sex','Age','Fare','Parch','SibSp']]
-an.check_data(aa,'logistic')
-#print(aa)
-x=np.array(aa)
-#print(x.shape)
-y = np.array(data['Survived'])
-theta = (np.ones(x.shape[1])).T
-grad,theta = aux.grad_desc_log(x,y,theta,1,10,500)
-#array for plotting sigmoid function to with the learned weights	
-xp = np.linspace(min(x.dot(theta)),max(x.dot(theta)),len(y))
-result = aux.sig(x.dot(theta))
-
-	#setting threshold for success or failure
-result[(result >= 0.5 )] = 1
-result[(result < 0.5)] = 0
-	#print(np.mean(result))
-print("accuracy = ",np.mean(result == y))
+		#checking for past results and exporting the current ones if the accuracy is greater than the past one
+		#in case the past accuracy is better than current one, current results are dismissed
+		past_accu = aux.check_past_result(result_file)
+		if (accuracy > past_accu):
+			output_dict = {'theta':theta,'columns':cols,'accuracy':accuracy}
+			aux.export_json(result_file,output_dict)
+			
+	else:
+		theta = an.linear(x,y,cols)
+		output_dict = {'theta':theta,'columns':cols}
+		aux.export_json(result_file,output_dict)
 		
-	#plots for comparison	
-plt.plot(xp,aux.sig(xp))	#sigmoid function
-plt.plot(x.dot(theta),y,'ro')	#original data
-plt.plot(x.dot(theta),result,'b+')#data using learned weights
-plt.show()"""
+
 if __name__ == '__main__':
 	main()
 

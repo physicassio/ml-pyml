@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from termcolor import colored
+import json
+#import time
 
 #function to regularize data when logistic regression is selected.
 #Might be a good idea to use for linear regression as well.
@@ -52,7 +54,7 @@ def cost_linear(x,y,theta):
 	return cost
 
 #Gradient descent for linear regression
-def grad_desc_linear(x,y,theta,alpha,n_iter):
+def grad_desc_linear(x,y,theta,alpha,n_iter,exp):
 
 	m = len(y)
 	c = []	
@@ -63,8 +65,9 @@ def grad_desc_linear(x,y,theta,alpha,n_iter):
 		theta = theta - alpha*grad
 		c.append(cost_linear(x,y,theta))
 		if i%100 ==0:
-			#print(str(grad))
-			print(colored("grad="+str(grad)+"\ttheta="+str(theta)+" in the "+str(i)+"th iteration",'green'))
+			
+			print(colored("grad="+str(grad)+"\ttheta="+str([theta[i]**(1./exp[i]) for i in range(len(theta))])+" in the "+str(i)+"th iteration",'green'))
+
 	plt.plot(range(len(c)),np.array(c),'--')
 	plt.ylabel('Cost Function')
 	plt.xlabel('Iterations')
@@ -80,7 +83,7 @@ def grad_desc_log(x,y,theta,alpha,lamb,n_iter):
 	cost = []
 	for i in range(int(n_iter+1)):
 		g = sig(x.dot(theta))
-		#print(g.shape,y.shape,x.shape)
+
 		tt = theta
 		tt[0] = 0
 		grad = (1./m)*(np.dot((g-y).T,x))+(lamb/m)*(tt.T)#+(0.5*lamb/m)*(tt/np.sqrt(tt))
@@ -94,13 +97,12 @@ def grad_desc_log(x,y,theta,alpha,lamb,n_iter):
 	plt.xlabel('Iterations')
 	plt.show()
 	return (grad,theta)
-	
+
+#function to get features' exponents (generalize to arbitrary order polinomials)
 def get_expo(x,y):
 	n = len(y)
 	expos = []
 	coeffs = []
-	#print(type(x))
-#	columns = x.columns()
 	Y = np.log10(y)
 	for column in x.columns:
 		column = np.log10(x[column])
@@ -111,3 +113,23 @@ def get_expo(x,y):
 		expos.append(np.round(expo,2))
 		coeffs.append(np.round(10**coef,2))
 	return expos,coeffs
+
+#function to export results to a json file	
+def export_json(fil,dic):
+	open(fil,'w').write(json.dumps(dic))
+	
+#function to look for past results for logistic regression performed on the same data file
+#this function is called in pyml.py and if the past accuracy is greater than the current one, the current results are dismissed.
+def check_past_result(fil):
+
+	try:
+		past_results = json.load(open(fil,'r'))
+		return(past_results['accuracy'])
+		
+	
+	except FileNotFoundError:
+		return(-1)
+	
+	
+	
+	

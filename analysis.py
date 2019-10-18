@@ -7,6 +7,7 @@ import aux
 from termcolor import colored
 import random
 import visualize as vi
+import time
 
 __author__ = 'Cássio Alves'
 
@@ -100,15 +101,15 @@ def get_columns(in_file):#,reg_type):
 			break
 		else:
 			print(colored("Invalid option. Please, select y or n ",'red',attrs=['underline','bold']))
-			mod = str(input(colored("Do you want to visualize your data before analyzing it? [y/n] ",'cyan',attrs=['bold'])))	
+			plo = str(input(colored("Do you want to visualize your data before analyzing it? [y/n] ",'cyan',attrs=['bold'])))	
 	
 	
-	
-	#vi.main(final_data,tar)
 	#adding bias column to x array
 	add_bias(final_data)
-
-	return np.array(final_data),np.array(tar),reg_type
+	#print(np.array(final_data))
+	chosen_columns.insert(0,'bias')
+	#print(chosen_columns)
+	return np.array(final_data),np.array(tar),reg_type,chosen_columns
 
 	
 #Function to add bias column to dataframe
@@ -170,7 +171,7 @@ def logistic(x,y):
 	alpha = ' '	
 	while (type(alpha) is not int) or (type(alpha) is not float):
 		try:
-			alpha = float(input(colored("Which learning rate do you want to use?(It's recommended values in range [0.0001-1.0]) ",'white',attrs=['bold'])))
+			alpha = float(input(colored("What learning rate do you want to use?(It's recommended values in range [0.0001-1.0]) ",'white',attrs=['bold'])))
 			break
 		except KeyboardInterrupt:
 			sys.exit('Exitting...')
@@ -201,6 +202,8 @@ def logistic(x,y):
 	theta = (np.ones(train_x.shape[1])).T		
 	grad,theta = aux.grad_desc_log(train_x,train_y,theta,alpha,lamb,n)
 	
+	
+	#Checking whether there are any NaN values in weights' array
 	for value in theta:
 		if (np.isnan(value)):
 			sys.exit(colored('Nan values found in weights\' array. Try changing your parameters (e.g. lambda and/or alpha) ','red',attrs=['bold']))
@@ -217,24 +220,25 @@ def logistic(x,y):
 	#setting threshold for success or failure
 	result[(result > 0.5 )] = 1
 	result[(result <= 0.5)] = 0
-	#print(np.mean(result))
-	print("accuracy = ",np.mean(result == test_y))
+	accu = np.mean(result == test_y)
+	print(colored("The model predicted %d samples right (out of %d), resulting in an accuracy = %.3f"%(len(result[result == test_y]),len(test_y),accu),'white',attrs=['bold']))
 		
-	#plots for comparison	
+	#plots for comparison
+	#vi.visualize_result(x,y,cols)	
 	plt.plot(xp,aux.sig(xp),label = 'sigmoid function')	#sigmoid function
 	plt.plot(test_x.dot(theta),test_y,'ro',label = 'testing set')	#original data
 	plt.plot(test_x.dot(theta),result,'b+',label = 'predictions')#data using learned weights
 	plt.legend()
 	plt.show()
+	return(list(theta),accu)
 
-def linear(x,y):
+def linear(x,y,cols):
 
-#	x,y = get_columns(chosen_file,'linear')
 	#Reading alpha and number of iterations
 	alpha = ' '	
 	while (type(alpha) is not int) or (type(alpha) is not float):
 		try:
-			alpha = float(input(colored("Which learning rate do you want to use?(It's recommended values in range [0.0001-1.0]) ",'white',attrs=['bold'])))
+			alpha = float(input(colored("What learning rate do you want to use?(It's recommended values in range [0.0001-1.0]) ",'white',attrs=['bold'])))
 			break
 		except KeyboardInterrupt:
 			sys.exit('Exitting...')
@@ -250,35 +254,34 @@ def linear(x,y):
 		except:
 			print(colored("Number of iterations must be a whole number",'red',attrs=['bold']))
 
-	theta = 0*(np.ones(x.shape[1])).T
+	#getting exponents for linear regression, in case there is any non-linear polinomial feature
+	exp,coe = aux.get_expo(pd.DataFrame(x).drop(0,1),y)
+
+	exp.insert(0,1)
+
+	for i in range(len(exp)):
+
+		if exp[i] > 1.0:
+			x[:,i] = x[:,i]**exp[i]
+
+	theta = 0*(np.ones(x.shape[1])).T	
 	
-		
-		
-	grad,theta = aux.grad_desc_linear(x,y,theta,alpha,n)
-	print(colored("Final values for grad="+str(grad)+"\ttheta="+str(theta)+" obtained by using Gradient Descent",'green',attrs=['bold']))
+	grad,theta = aux.grad_desc_linear(x,y,theta,alpha,n,exp)
+
+	#Checking whether there are any NaN values in weights' array	
+	for value in theta:
+		if (np.isnan(value)):
+			sys.exit(colored('Nan values found in weights\' array. Try changing your parameters (e.g. lambda and/or alpha) ','red',attrs=['bold']))
+			
+	print(colored("Final values for grad="+str(grad)+"\ttheta="+str([theta[i]**(1./exp[i]) for i in range(len(theta))])+" obtained by using Gradient Descent",'green',attrs=['bold']))
 
 	#Computing theta using the normal equation
 	xtx = np.linalg.inv((x.T).dot(x))
 	normal_theta = xtx.dot((x.T).dot(y))
-	print(colored("Final value for theta using the Normal Equation\t"+str(normal_theta),'green',attrs=['bold']))
+	print(colored("Final value for theta using the Normal Equation\t"+str([normal_theta[i]**(1./exp[i]) for i in range(len(normal_theta))]),'green',attrs=['bold']))
 		
-	#xp = np.linspace(0,15,len(y))
-	test = pd.DataFrame(x)
-	
-	#vi.main(test,test.dot(theta))
-	vi.visualize_result(theta,test,y)
-#	print(test.drop(0,1))
-
-	#getting exponents for linear regression, in case there is any non-linear polinomial feature
-	exp,coe = aux.get_expo(test.drop(0,1),y)
-	
-	exp.insert(0,1)
-	print(exp,coe)
-	#plt.plot(test[:][1],y,'ro',label='Dataset')
-	#plt.plot(test[:][1],test.dot(theta),label = 'Gradient Descent Regression')
-	#plt.plot(test[:][1],test.dot(normal_theta),label = 'Normal Equation Regression')
-	#plt.legend()
-	#plt.show()
+	vi.visualize_result(theta,x,y,exp,cols)
+	return(list(theta))
 		
 if __name__ == '__main__':
 	main()
