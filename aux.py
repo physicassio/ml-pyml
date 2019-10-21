@@ -84,10 +84,15 @@ def grad_desc_log(x,y,theta,alpha,lamb,n_iter):
 	for i in range(int(n_iter+1)):
 		g = sig(x.dot(theta))
 
-		tt = theta
+		tt = np.array(list(theta))
+		#print(theta)
 		tt[0] = 0
+		
+		
 		grad = (1./m)*(np.dot((g-y).T,x))+(lamb/m)*(tt.T)#+(0.5*lamb/m)*(tt/np.sqrt(tt))
 		theta = theta - alpha*grad
+		#print(theta)
+		#sys.exit()
 		#c.append(np.dot(grad,grad)) #Useful for checking gradient convergence
 		c.append(cost_log(x,y,theta,lamb))
 		if i%100 ==0:

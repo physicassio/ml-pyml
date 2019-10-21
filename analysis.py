@@ -78,14 +78,13 @@ def get_columns(in_file):#,reg_type):
 	#asks the user for the dependent variable column
 	target = int(input(colored('Choose the target column ','white',attrs=['bold'])))
 	tar = selected_data[chosen_columns[target-1]]
-
+	target_name = chosen_columns[target-1]
+	
 	print(colored("You chose '"+str(chosen_columns[target-1])+"' as your target column ",'yellow',attrs=['bold']))
 	
 	#removing target column from the chosen columns list, so the function can return x and y arrays separately
 	chosen_columns.pop(target-1)
 	final_data = pd.DataFrame(selected_data[chosen_columns])
-	#print(final_data)
-	#print(tar)
 
 	check_data(selected_data,reg_type)
 	#plotting features against target column
@@ -106,10 +105,9 @@ def get_columns(in_file):#,reg_type):
 	
 	#adding bias column to x array
 	add_bias(final_data)
-	#print(np.array(final_data))
 	chosen_columns.insert(0,'bias')
-	#print(chosen_columns)
-	return np.array(final_data),np.array(tar),reg_type,chosen_columns
+
+	return np.array(final_data),np.array(tar),reg_type,chosen_columns,target_name
 
 	
 #Function to add bias column to dataframe
@@ -120,7 +118,7 @@ def add_bias(data):
 #Function to check if x-columns have NaN values and asks if user wants to replace with column Gaussian distributed values(based in the column properties themselves)
 #Might be a good idea to implement replacing with values other the mentioned above
 def check_data(data,reg_type):
-	#print(data)
+
 	for column in data:
 		col = data[column]
 		
@@ -196,9 +194,6 @@ def logistic(x,y):
 		except:
 			print(colored("lambda must be a number",'red',attrs=['bold']))
 
-	#theta = (np.ones(x.shape[1])).T		
-	#grad,theta = aux.grad_desc_log(x,y,theta,alpha,lamb,n)
-
 	theta = (np.ones(train_x.shape[1])).T		
 	grad,theta = aux.grad_desc_log(train_x,train_y,theta,alpha,lamb,n)
 	
@@ -214,12 +209,11 @@ def logistic(x,y):
 	#array for plotting sigmoid function to with the learned weights	
 	xp = np.linspace(min(test_x.dot(theta)),max(test_x.dot(theta)),len(test_y))
 	result = aux.sig(test_x.dot(theta))
-#	xp = np.linspace(min(x.dot(theta)),max(x.dot(theta)),len(y))
-#	result = aux.sig(x.dot(theta))
 
 	#setting threshold for success or failure
-	result[(result > 0.5 )] = 1
-	result[(result <= 0.5)] = 0
+	result[(result > 0.4 )] = 1
+	result[(result <= 0.4)] = 0
+	
 	accu = np.mean(result == test_y)
 	print(colored("The model predicted %d samples right (out of %d), resulting in an accuracy = %.3f"%(len(result[result == test_y]),len(test_y),accu),'white',attrs=['bold']))
 		

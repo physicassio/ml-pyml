@@ -28,7 +28,6 @@ print(colored("\t|_|    |___/\t"   +version_string,'yellow',attrs=['dark','bold'
 #Function to display files in a directory
 def get_files(directory):
 
-	#print(directory)
 	while (1>0):
 		if (os.path.exists(directory)):
 			break
@@ -58,7 +57,6 @@ def get_files(directory):
 				chosen_file = get_files(chosen_file)
 				break
 			else:
-				#files = open_file(chosen_file)
 				return chosen_file
 				break
 		except IndexError:
@@ -68,9 +66,6 @@ def get_files(directory):
 			sys.exit('Exitting...')
 
 	return chosen_file
-
-
-	#return file_list
 
 #Function to open a check if the selected file exits and/or if it is a directory
 def open_file(file_path):
@@ -97,25 +92,50 @@ def main():
 	chosen_file = get_files(input(colored('\nType in dir path for listing files in it ','white',attrs=['bold'])))	
 
 	#Prompting user for what kind of regression to perform
-	x,y,regression_type,cols = an.get_columns(chosen_file)
+	x,y,regression_type,cols,target = an.get_columns(chosen_file)
 
-	result_file = chosen_file + '_results.json'
+	result_files = chosen_file.rstrip('.csv') + '_results'
 	
-	if regression_type == 'logistic':
+	if (regression_type == 'logistic'):
 	
 		theta,accuracy = an.logistic(x,y)
 
 		#checking for past results and exporting the current ones if the accuracy is greater than the past one
 		#in case the past accuracy is better than current one, current results are dismissed
-		past_accu = aux.check_past_result(result_file)
+		past_accu = aux.check_past_result(result_files+'.json')
 		if (accuracy > past_accu):
 			output_dict = {'theta':theta,'columns':cols,'accuracy':accuracy}
-			aux.export_json(result_file,output_dict)
+			aux.export_json(result_files+'.json',output_dict)
+		
+		else:
+			print(colored('Your previous result had %.3f accuracy and the current %.3f. Current one will not be saved'%(past_accu,accuracy),'yellow',attrs=['bold']))
 			
 	else:
 		theta = an.linear(x,y,cols)
 		output_dict = {'theta':theta,'columns':cols}
-		aux.export_json(result_file,output_dict)
+		aux.export_json(result_files+'.json',output_dict)
+		
+	test_hip = input(colored('Do you want to apply your model to a different dataset? ','green',attrs=['bold']))
+	
+	if (test_hip == 'y'):
+		
+		test_file = get_files(os.path.dirname(chosen_file))
+		test_data = pd.read_csv(test_file)[cols[1:]]
+		an.add_bias(test_data)
+		an.check_data(test_data,regression_type)
+		
+		if (regression_type == 'logistic'):
+			res = aux.sig(np.dot(test_data,theta))
+			res[res > 0.5 ] = 1
+			res[res <= 0.5] = 0
+		else:
+			res = np.dot(x,theta)
+		res_file = open(result_files+'_log_reg.csv','w')
+		res_file.write(target+'\n')
+		res_file.write('\n'.join([str(x) for x in res]))
+		res_file.close()
+
+		
 		
 
 if __name__ == '__main__':
