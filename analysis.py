@@ -22,19 +22,22 @@ def get_columns(in_file):#,reg_type):
 		
 	except:
 		sys.exit(colored('File '+str(in_file)+' does not seem to be a valid CSV file','red',attrs=['bold']))
-		
+	#selecting only numeric columns in selected file
+	dataint = data[data.columns[data.dtypes=='int64']]
+	datafloat = data[data.columns[data.dtypes=='float64']]
+	
+	#setting a dummy name for row index so the data can be merged based on this index
+	data.index.name = 'dummy_index'
+	data = pd.merge(dataint,datafloat,on='dummy_index')
 	columns = data.columns
 	
 	
 	
-	print(colored('Columns in file %s'%(in_file),'blue',attrs=['bold']))
+	print(colored('Numeric columns in file %s'%(in_file),'blue',attrs=['bold']))
 	for i in range(len(columns)):
 		
 		#+1 so user does not need to type in 0
-		if data[columns[i]].dtypes == 'int64' or data[columns[i]].dtypes == 'float64':
 			print(colored(str(i+1)+'-'+columns[i]+' '+str(data[columns[i]].dtypes),'green',attrs=['bold']))
-		else:
-			print(colored(str(i+1)+'-'+columns[i]+' '+str(data[columns[i]].dtypes),'red',attrs=['bold']))
 
 	inp = ''
 	chosen_columns = []
@@ -211,8 +214,8 @@ def logistic(x,y):
 	result = aux.sig(test_x.dot(theta))
 
 	#setting threshold for success or failure
-	result[(result > 0.4 )] = 1
-	result[(result <= 0.4)] = 0
+	result[(result > 0.5 )] = 1
+	result[(result <= 0.5)] = 0
 	
 	accu = np.mean(result == test_y)
 	print(colored("The model predicted %d samples right (out of %d), resulting in an accuracy = %.3f"%(len(result[result == test_y]),len(test_y),accu),'white',attrs=['bold']))
