@@ -42,18 +42,27 @@ def get_columns(in_file):#,reg_type):
 	inp = ''
 	chosen_columns = []
 	while (inp != 'q'):
-		inp = int(input(colored('Choose one column or press type in \'0\' to finish/exit ','white',attrs=['bold'])))	
+		inp = input(colored('Choose one column and press Enter or type in \'0\' to finish selecting. (Type in \'a\' to choose all columns at once) ','white',attrs=['bold']))	
 
-		if (inp == 0):
+			
+		if (inp == 'a'):
+			
+			chosen_columns = list(columns)
 			break
-		else:
-			#checking if the selected column is valid. Otherwise, raises an exception.
-			try:
-				data[columns[inp-1]]
-				chosen_columns.append(columns[inp-1])
+			
 
-			except KeyError:
-				print(colored('Invalid column. Please, select a valid column name ','red',attrs=['bold']))
+		elif (int(inp) == 0):
+			break
+			
+		elif (int(inp) in range(1,len(columns)+1)):
+		
+			data[columns[int(inp)-1]]
+			chosen_columns.append(columns[int(inp)-1])
+		
+		else:
+		
+			print(colored('Invalid column. Please, select a valid column name ','red',attrs=['bold']))
+
 
 	selected_data = data[chosen_columns]
 	
