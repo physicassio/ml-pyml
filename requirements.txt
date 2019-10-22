@@ -1,0 +1,7 @@
+-e git+https://github.com/physicassio/pyml.git@master#egg=pyml
+pandas==0.25.1
+numpy==1.14.5
+matplotlib==2.2.2
+termcolor==1.1.0
+geojson==2.4.0
+jsonschema==2.6.0
