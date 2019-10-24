@@ -5,8 +5,6 @@ into json files and it keeps always the best result (accuracy), in case of logis
 it also allows the user to visualize the data before computations and also shows regression curves after computations are done.
 All of this is done interactively in a extremely intuitive manner.
 
-
-
 It works on linux systems with python 3.7 installed and uses only a few libraries, all of which are listed in the requirements.txt
 file. All one needs to do is clone into its repository
 
@@ -23,3 +21,5 @@ $python3 pyml.py
 All the fun thereafter is pure intuition.
 
 Feel free to report issues/bugs, recommend improvements and contribute.
+
+![Screenshot](https://github.com/physicassio/pyml/blob/gh-files/images/pymlfin.png)
